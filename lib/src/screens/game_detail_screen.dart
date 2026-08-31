@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flag_core/flag_core.dart';
-import 'package:flag_domain/flag_domain.dart';
+import 'package:flag_public_app/core.dart';
+import 'package:flag_public_app/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -191,11 +191,15 @@ class _GameDetailContent extends StatelessWidget {
             context,
             teamId: display.homeTeamId,
             teamName: display.homeTeamName,
+            competitionId: display.competitionId,
+            competitionName: competitionName,
           ),
           onAwayTeamTap: () => openTeamDetail(
             context,
             teamId: display.awayTeamId,
             teamName: display.awayTeamName,
+            competitionId: display.competitionId,
+            competitionName: competitionName,
           ),
         ),
         const SizedBox(height: 12),

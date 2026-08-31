@@ -1,6 +1,6 @@
-import 'package:flag_api/flag_api.dart';
-import 'package:flag_core/flag_core.dart';
-import 'package:flag_domain/flag_domain.dart';
+import 'package:flag_public_app/api.dart';
+import 'package:flag_public_app/core.dart';
+import 'package:flag_public_app/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -201,9 +201,29 @@ final rosterApiProvider = Provider<RosterApi>(
   (ref) => RosterApi(ref.watch(apiClientProvider)),
 );
 
-/// Elenco público de um time (`GET /api/v1/teams/{teamId}/roster`).
-final teamRosterProvider = FutureProvider.family<List<RosterEntry>, String>(
-  (ref, teamId) => ref.watch(rosterApiProvider).listByTeam(teamId),
+/// Elenco público de um time em uma competição específica.
+///
+/// `GET /api/v1/teams/{teamId}/roster?competitionId={compId}`.
+final teamRosterProvider =
+    FutureProvider.family<List<RosterEntry>, ({String teamId, String competitionId})>(
+      (ref, args) => ref
+          .watch(rosterApiProvider)
+          .listByTeamAndCompetition(args.teamId, args.competitionId),
+    );
+
+/// Times inscritos em uma competição (via `competition_team`).
+///
+/// `GET /api/v1/competitions/{compId}/teams`.
+final competitionTeamsProvider = FutureProvider.family<List<Team>, String>(
+  (ref, competitionId) =>
+      ref.watch(teamApiProvider).listByCompetition(competitionId),
+);
+
+/// Elencos de um time (todas as competições).
+///
+/// `GET /api/v1/teams/{teamId}/rosters`.
+final teamRostersProvider = FutureProvider.family<List<Roster>, String>(
+  (ref, teamId) => ref.watch(rosterApiProvider).listRostersByTeam(teamId),
 );
 
 /// Jogo enriquecido para a tela Ao vivo (com metadados de filtro).

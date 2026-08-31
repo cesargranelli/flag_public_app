@@ -1,5 +1,5 @@
-import 'package:flag_core/flag_core.dart';
-import 'package:flag_domain/flag_domain.dart';
+import 'package:flag_public_app/core.dart';
+import 'package:flag_public_app/domain.dart';
 import 'package:flutter/material.dart';
 
 /// Card de campeonato exibido na lista da tela inicial.

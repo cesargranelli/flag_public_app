@@ -1,5 +1,5 @@
-import 'package:flag_core/flag_core.dart';
-import 'package:flag_domain/flag_domain.dart';
+import 'package:flag_public_app/core.dart';
+import 'package:flag_public_app/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,34 +8,64 @@ import '../providers/providers.dart';
 
 /// Argumentos de navegação da página do time (rota `/teams/:id`).
 ///
-/// O nome é passado via `extra` no `context.push` para exibição imediata;
-/// em deep links (sem `extra`) a tela busca os dados por id.
+/// O nome e a competição são passados via `extra` no `context.push`
+/// para exibição imediata; em deep links (sem `extra`) a tela busca
+/// os dados por id.
 class TeamDetailArgs {
   final String teamId;
   final String teamName;
+  final String? competitionId;
+  final String? competitionName;
 
-  const TeamDetailArgs({required this.teamId, this.teamName = ''});
+  const TeamDetailArgs({
+    required this.teamId,
+    this.teamName = '',
+    this.competitionId,
+    this.competitionName,
+  });
 }
 
 /// Abre a página pública do time quando houver id; caso contrário, ignora.
 ///
 /// Usada pelos cards de jogo (calendário/resultados/detalhe) e pela tabela
 /// de classificação ao tocar no nome de um time.
-void openTeamDetail(BuildContext context, {String? teamId, String? teamName}) {
+void openTeamDetail(
+  BuildContext context, {
+  String? teamId,
+  String? teamName,
+  String? competitionId,
+  String? competitionName,
+}) {
   final id = teamId?.trim();
   if (id == null || id.isEmpty) return;
   context.push(
     '/teams/$id',
-    extra: TeamDetailArgs(teamId: id, teamName: teamName ?? ''),
+    extra: TeamDetailArgs(
+      teamId: id,
+      teamName: teamName ?? '',
+      competitionId: competitionId,
+      competitionName: competitionName,
+    ),
   );
 }
 
 /// Tela pública de um time: dados do time e elenco (roster) de atletas.
+///
+/// Quando [competitionId] é informado, mostra o elenco dessa competição.
+/// Caso contrário, lista os elencos de todas as competições do time.
 class TeamDetailScreen extends ConsumerWidget {
   final String teamId;
   final String teamName;
+  final String? competitionId;
+  final String? competitionName;
 
-  const TeamDetailScreen({super.key, required this.teamId, this.teamName = ''});
+  const TeamDetailScreen({
+    super.key,
+    required this.teamId,
+    this.teamName = '',
+    this.competitionId,
+    this.competitionName,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,7 +85,14 @@ class TeamDetailScreen extends ConsumerWidget {
           children: [
             _TeamHeader(team: team),
             const SizedBox(height: 24),
-            _RosterSection(teamId: teamId),
+            if (competitionId != null)
+              _RosterSection(
+                teamId: teamId,
+                competitionId: competitionId!,
+                competitionName: competitionName ?? '',
+              )
+            else
+              _RostersByCompetitionSection(teamId: teamId),
           ],
         ),
       ),
@@ -153,41 +190,74 @@ class _TeamLogo extends StatelessWidget {
   }
 }
 
-/// Seção do elenco: agrupa os atletas por posição (ordem QB → P do domínio)
-/// e, dentro de cada grupo, ordena por número (sem número ao final) e nome.
+/// Seção do elenco para uma competição específica.
 class _RosterSection extends ConsumerWidget {
   final String teamId;
+  final String competitionId;
+  final String competitionName;
 
-  const _RosterSection({required this.teamId});
+  const _RosterSection({
+    required this.teamId,
+    required this.competitionId,
+    required this.competitionName,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rosterAsync = ref.watch(teamRosterProvider(teamId));
+    final rosterAsync = ref.watch(
+      teamRosterProvider((teamId: teamId, competitionId: competitionId)),
+    );
 
     return rosterAsync.when(
       loading: () => const AppLoading(message: 'Carregando elenco...'),
       error: (error, stackTrace) => AppErrorState(
         message: 'Não foi possível carregar o elenco',
-        onRetry: () => ref.invalidate(teamRosterProvider(teamId)),
+        onRetry: () => ref.invalidate(
+          teamRosterProvider((teamId: teamId, competitionId: competitionId)),
+        ),
       ),
       data: (entries) {
         if (entries.isEmpty) {
           return const AppEmptyState(
-            message: 'Nenhum atleta inscrito neste time',
+            message: 'Nenhum atleta inscrito neste elenco',
             icon: Icons.groups_outlined,
           );
         }
 
-        final sorted = _sortedEntries(entries);
-        final groups = <String, List<RosterEntry>>{
-          for (final position in AthletePosition.values)
-            position.label: sorted
-                .where((entry) => entry.position == position)
-                .toList(),
-          'Sem posição': sorted
-              .where((entry) => entry.position == null)
-              .toList(),
-        }..removeWhere((_, list) => list.isEmpty);
+        return _RosterList(
+          entries: entries,
+          title: competitionName.isNotEmpty
+              ? 'Elenco — $competitionName (${entries.length})'
+              : 'Elenco (${entries.length})',
+        );
+      },
+    );
+  }
+}
+
+/// Seção que lista elencos agrupados por competição.
+class _RostersByCompetitionSection extends ConsumerWidget {
+  final String teamId;
+
+  const _RostersByCompetitionSection({required this.teamId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rostersAsync = ref.watch(teamRostersProvider(teamId));
+
+    return rostersAsync.when(
+      loading: () => const AppLoading(message: 'Carregando elencos...'),
+      error: (error, stackTrace) => AppErrorState(
+        message: 'Não foi possível carregar os elencos',
+        onRetry: () => ref.invalidate(teamRostersProvider(teamId)),
+      ),
+      data: (rosters) {
+        if (rosters.isEmpty) {
+          return const AppEmptyState(
+            message: 'Nenhum elenco cadastrado para este time',
+            icon: Icons.groups_outlined,
+          );
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +271,7 @@ class _RosterSection extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Elenco (${entries.length})',
+                  'Elencos (${rosters.length})',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -211,39 +281,170 @@ class _RosterSection extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            for (final entry in groups.entries) ...[
-              Padding(
-                padding: const EdgeInsets.only(top: 8, bottom: 4),
-                child: Text(
-                  entry.key.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    for (var i = 0; i < entry.value.length; i++) ...[
-                      if (i > 0) const Divider(height: 1, indent: 68),
-                      _AthleteTile(entry: entry.value[i]),
-                    ],
-                  ],
-                ),
-              ),
+            for (final roster in rosters) ...[
+              _RosterCard(teamId: teamId, roster: roster),
+              const SizedBox(height: 8),
             ],
           ],
         );
       },
     );
   }
+}
 
-  /// Ordenação estável: número crescente (nulos ao final) e depois nome.
+/// Card de um elenco que expande para mostrar os atletas.
+class _RosterCard extends ConsumerWidget {
+  final String teamId;
+  final Roster roster;
+
+  const _RosterCard({required this.teamId, required this.roster});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entriesAsync = ref.watch(
+      teamRosterProvider(
+        (teamId: teamId, competitionId: roster.competitionId),
+      ),
+    );
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: ExpansionTile(
+        title: Text(
+          roster.name ?? roster.competitionId,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: roster.season != null
+            ? Text(
+                'Temporada ${roster.season}',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              )
+            : null,
+        children: entriesAsync.when(
+          loading: () => const [AppLoading(message: 'Carregando...')],
+          error: (_, _) => const [
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Erro ao carregar elenco'),
+            ),
+          ],
+          data: (entries) {
+            if (entries.isEmpty) {
+              return const [
+                Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Nenhum atleta neste elenco'),
+                ),
+              ];
+            }
+            final sorted = _sortedEntries(entries);
+            return [
+              for (var i = 0; i < sorted.length; i++) ...[
+                if (i > 0) const Divider(height: 1, indent: 68),
+                _AthleteTile(entry: sorted[i]),
+              ],
+            ];
+          },
+        ),
+      ),
+    );
+  }
+
+  List<RosterEntry> _sortedEntries(List<RosterEntry> entries) {
+    final sorted = [...entries]
+      ..sort((a, b) {
+        final numberA = a.number;
+        final numberB = b.number;
+        if (numberA == null && numberB != null) return 1;
+        if (numberA != null && numberB == null) return -1;
+        final byNumber = (numberA ?? 0).compareTo(numberB ?? 0);
+        if (byNumber != 0) return byNumber;
+        return a.athleteName.toLowerCase().compareTo(
+          b.athleteName.toLowerCase(),
+        );
+      });
+    return sorted;
+  }
+}
+
+/// Widget compartilhado para exibir uma lista de atletas agrupados por posição.
+class _RosterList extends StatelessWidget {
+  final List<RosterEntry> entries;
+  final String title;
+
+  const _RosterList({required this.entries, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = _sortedEntries(entries);
+    final groups = <String, List<RosterEntry>>{
+      for (final position in AthletePosition.values)
+        position.label: sorted
+            .where((entry) => entry.position == position)
+            .toList(),
+      'Sem posição': sorted
+          .where((entry) => entry.position == null)
+          .toList(),
+    }..removeWhere((_, list) => list.isEmpty);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.groups_outlined,
+              size: 20,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        for (final entry in groups.entries) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              entry.key.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var i = 0; i < entry.value.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, indent: 68),
+                  _AthleteTile(entry: entry.value[i]),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   List<RosterEntry> _sortedEntries(List<RosterEntry> entries) {
     final sorted = [...entries]
       ..sort((a, b) {

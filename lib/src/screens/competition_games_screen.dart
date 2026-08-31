@@ -1,5 +1,5 @@
-import 'package:flag_core/flag_core.dart';
-import 'package:flag_domain/flag_domain.dart';
+import 'package:flag_public_app/core.dart';
+import 'package:flag_public_app/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -62,6 +62,7 @@ class _CompetitionGamesScreenState
         return _GamesView(
           games: games,
           selectedRound: _selectedRound,
+          competitionId: widget.competitionId,
           competitionName: widget.competitionName,
           onRoundSelected: (round) => setState(() => _selectedRound = round),
         );
@@ -74,12 +75,14 @@ class _CompetitionGamesScreenState
 class _GamesView extends StatelessWidget {
   final List<Game> games;
   final int? selectedRound;
+  final String competitionId;
   final String competitionName;
   final ValueChanged<int?> onRoundSelected;
 
   const _GamesView({
     required this.games,
     required this.selectedRound,
+    required this.competitionId,
     required this.competitionName,
     required this.onRoundSelected,
   });
@@ -123,11 +126,15 @@ class _GamesView extends StatelessWidget {
                   context,
                   teamId: game.homeTeamId,
                   teamName: game.homeTeamName,
+                  competitionId: competitionId,
+                  competitionName: competitionName,
                 ),
                 onAwayTeamTap: () => openTeamDetail(
                   context,
                   teamId: game.awayTeamId,
                   teamName: game.awayTeamName,
+                  competitionId: competitionId,
+                  competitionName: competitionName,
                 ),
               ),
             ),
@@ -155,11 +162,15 @@ class _GamesView extends StatelessWidget {
                   context,
                   teamId: game.homeTeamId,
                   teamName: game.homeTeamName,
+                  competitionId: competitionId,
+                  competitionName: competitionName,
                 ),
                 onAwayTeamTap: () => openTeamDetail(
                   context,
                   teamId: game.awayTeamId,
                   teamName: game.awayTeamName,
+                  competitionId: competitionId,
+                  competitionName: competitionName,
                 ),
               ),
             ),
