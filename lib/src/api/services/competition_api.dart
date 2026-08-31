@@ -37,6 +37,7 @@ class CompetitionApi {
   Future<Competition> create({
     required String organizationId,
     required String name,
+    required String season,
     String? description,
     String? startDate,
     String? endDate,
@@ -45,11 +46,13 @@ class CompetitionApi {
     String? gender,
     String? ageGroup,
     GroupingType? groupingType,
-  }) => _client.post(
+  }) =>
+      _client.post(
     '/api/v1/competitions',
     _body(
       organizationId: organizationId,
       name: name,
+      season: season,
       description: description,
       startDate: startDate,
       endDate: endDate,
@@ -66,6 +69,7 @@ class CompetitionApi {
     String id, {
     required String organizationId,
     required String name,
+    required String season,
     String? description,
     String? startDate,
     String? endDate,
@@ -74,11 +78,13 @@ class CompetitionApi {
     String? gender,
     String? ageGroup,
     GroupingType? groupingType,
-  }) => _client.put(
+  }) =>
+      _client.put(
     '/api/v1/competitions/$id',
     _body(
       organizationId: organizationId,
       name: name,
+      season: season,
       description: description,
       startDate: startDate,
       endDate: endDate,
@@ -94,6 +100,7 @@ class CompetitionApi {
   Map<String, dynamic> _body({
     required String organizationId,
     required String name,
+    required String season,
     String? description,
     String? startDate,
     String? endDate,
@@ -102,9 +109,11 @@ class CompetitionApi {
     String? gender,
     String? ageGroup,
     GroupingType? groupingType,
-  }) => {
+  }) =>
+      {
     'organizationId': organizationId,
     'name': name,
+    'season': season,
     if (description != null && description.isNotEmpty)
       'description': description,
     'startDate': ?startDate,

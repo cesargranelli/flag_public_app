@@ -13,6 +13,8 @@ export 'src/domain/models/athlete.dart';
 export 'src/domain/models/athlete_batch.dart';
 export 'src/domain/models/roster_entry.dart';
 export 'src/domain/models/roster_batch.dart';
+export 'src/domain/models/roster.dart';
+export 'src/domain/models/competition_team.dart';
 export 'src/domain/models/check_in.dart';
 export 'src/domain/models/user.dart';
 export 'src/domain/models/login_response.dart';
