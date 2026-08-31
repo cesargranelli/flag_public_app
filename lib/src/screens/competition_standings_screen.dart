@@ -69,7 +69,13 @@ class CompetitionStandingsScreen extends ConsumerWidget {
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
-            children: [_StandingsTable(standings: standings)],
+            children: [
+              _StandingsTable(
+                standings: standings,
+                competitionId: competitionId,
+                competitionName: competitionName,
+              ),
+            ],
           );
         },
       ),
@@ -80,8 +86,14 @@ class CompetitionStandingsScreen extends ConsumerWidget {
 /// Tabela de classificação com cabeçalho e linhas de cada posição.
 class _StandingsTable extends StatelessWidget {
   final List<Standing> standings;
+  final String competitionId;
+  final String competitionName;
 
-  const _StandingsTable({required this.standings});
+  const _StandingsTable({
+    required this.standings,
+    required this.competitionId,
+    required this.competitionName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +107,12 @@ class _StandingsTable extends StatelessWidget {
       child: Column(
         children: [
           const _TableHeader(),
-          for (final standing in standings) _StandingRow(standing: standing),
+          for (final standing in standings)
+            _StandingRow(
+              standing: standing,
+              competitionId: competitionId,
+              competitionName: competitionName,
+            ),
         ],
       ),
     );
@@ -159,8 +176,14 @@ class _HeaderCell extends StatelessWidget {
 /// linha abre a página do time ao ser tocada.
 class _StandingRow extends StatelessWidget {
   final Standing standing;
+  final String competitionId;
+  final String competitionName;
 
-  const _StandingRow({required this.standing});
+  const _StandingRow({
+    required this.standing,
+    required this.competitionId,
+    required this.competitionName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -181,6 +204,8 @@ class _StandingRow extends StatelessWidget {
           context,
           teamId: standing.teamId,
           teamName: standing.teamName,
+          competitionId: competitionId,
+          competitionName: competitionName,
         ),
         borderRadius: BorderRadius.circular(16),
         child: Container(
