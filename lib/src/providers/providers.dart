@@ -203,7 +203,7 @@ final rosterApiProvider = Provider<RosterApi>(
 
 /// Elenco público de um time em uma competição específica.
 ///
-/// `GET /api/v1/teams/{teamId}/roster?competitionId={compId}`.
+/// `GET /api/v1/teams/{teamId}/competitions/{competitionId}/roster`.
 final teamRosterProvider =
     FutureProvider.family<List<RosterEntry>, ({String teamId, String competitionId})>(
       (ref, args) => ref
@@ -214,10 +214,11 @@ final teamRosterProvider =
 /// Times inscritos em uma competição (via `competition_team`).
 ///
 /// `GET /api/v1/competitions/{compId}/teams`.
-final competitionTeamsProvider = FutureProvider.family<List<Team>, String>(
-  (ref, competitionId) =>
-      ref.watch(teamApiProvider).listByCompetition(competitionId),
-);
+final competitionTeamsProvider =
+    FutureProvider.family<List<CompetitionTeam>, String>(
+      (ref, competitionId) =>
+          ref.watch(teamApiProvider).listByCompetition(competitionId),
+    );
 
 /// Elencos de um time (todas as competições).
 ///

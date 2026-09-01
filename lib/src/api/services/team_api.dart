@@ -12,9 +12,13 @@ class TeamApi {
   TeamApi(this._client);
 
   /// Lista os times de uma competição (via `competition_team`).
-  Future<List<Team>> listByCompetition(String competitionId) => _client.getList(
+  ///
+  /// O backend retorna `CompetitionTeamResponse` (inscrição + dados do time),
+  /// não objetos `Team`.
+  Future<List<CompetitionTeam>> listByCompetition(String competitionId) =>
+      _client.getList(
         '/api/v1/competitions/$competitionId/teams',
-        Team.fromJson,
+        CompetitionTeam.fromJson,
       );
 
   /// Lista os times de uma organização (clube).

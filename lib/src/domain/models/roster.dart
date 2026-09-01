@@ -1,7 +1,8 @@
 /// Elenco de um time para uma competição/temporada.
 ///
 /// Um time pode ter elencos diferentes por competição.
-/// A API retorna o elenco via `GET /api/v1/teams/{teamId}/roster?competitionId={compId}`.
+/// A API retorna os elencos via `GET /api/v1/teams/{teamId}/rosters` e o
+/// elenco de uma competição via `GET /api/v1/teams/{teamId}/competitions/{competitionId}/roster`.
 class Roster {
   final String id;
   final String teamId;

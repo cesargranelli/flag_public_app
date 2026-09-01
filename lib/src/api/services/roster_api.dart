@@ -13,13 +13,13 @@ class RosterApi {
 
   /// Lista o elenco de um time em uma competição específica.
   ///
-  /// `GET /api/v1/teams/{teamId}/roster?competitionId={compId}`.
+  /// `GET /api/v1/teams/{teamId}/competitions/{competitionId}/roster`.
   Future<List<RosterEntry>> listByTeamAndCompetition(
     String teamId,
     String competitionId,
   ) =>
       _client.getList(
-        '/api/v1/teams/$teamId/roster?competitionId=$competitionId',
+        '/api/v1/teams/$teamId/competitions/$competitionId/roster',
         RosterEntry.fromJson,
       );
 

@@ -146,14 +146,17 @@ class AppRouter {
         path: '/teams/:id',
         name: 'teamDetail',
         builder: (context, state) {
-          // O nome do time pode vir via `extra` (TeamDetailArgs) para
-          // exibição imediata; em deep links a tela busca o time por id.
+          // O nome do time e a competição podem vir via `extra`
+          // (TeamDetailArgs) para exibição imediata; em deep links a tela
+          // busca o time por id.
           final args = state.extra is TeamDetailArgs
               ? state.extra as TeamDetailArgs
               : null;
           return TeamDetailScreen(
             teamId: args?.teamId ?? state.pathParameters['id']!,
             teamName: args?.teamName ?? '',
+            competitionId: args?.competitionId,
+            competitionName: args?.competitionName,
           );
         },
       ),

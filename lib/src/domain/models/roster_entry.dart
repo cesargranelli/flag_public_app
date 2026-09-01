@@ -4,7 +4,7 @@ import '../enums/athlete_position.dart';
 ///
 /// Referencia um [Roster] (elenco) via `rosterId` em vez de `teamId` direto.
 ///
-/// Shape de `GET /api/v1/teams/{teamId}/roster?competitionId={compId}`.
+/// Shape de `GET /api/v1/teams/{teamId}/competitions/{competitionId}/roster`.
 class RosterEntry {
   final String id;
   final String rosterId;
